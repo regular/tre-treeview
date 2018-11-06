@@ -10,7 +10,7 @@ module.exports = function(ssb, opts) {
   opts = opts || {}
 
   document.body.appendChild(h('style', `
-    details.no-children > summary::-webkit-details-marker {
+    .no-children>details>summary::-webkit-details-marker {
       opacity: 0;
     }
   `))
@@ -32,28 +32,32 @@ module.exports = function(ssb, opts) {
     const drain = collectMutations(children)
     const children_obs = Value()
 
-    const el = h('details', {
-      classList: computed(has_children, hc => hc ? 'children' : 'no-children'),
-      hooks: [el => function release() {
-        console.log('release')
-        children_obs.set(null)
-        drain.abort()
-      }],
-      'ev-toggle': e => {
-        if (e.target.open) {
-          children_obs.set(
-            h('ul', MutantMap(children, m => {
-              return h('li', render(m()))
-            }, (a,b) => a===b ))
-          )
-        } else {
+    const el = h(
+      'li', {
+        classList: computed(has_children, hc => hc ? 'children' : 'no-children'),
+        hooks: [el => function release() {
+          console.log('release')
           children_obs.set(null)
-        }
-      } 
-    }, [
-      h('summary', summary(kv)),
-      children_obs
-    ])
+          drain.abort()
+        }]
+      },
+      h('details', {
+        'ev-toggle': e => {
+          if (e.target.open) {
+            children_obs.set(
+              h('ul', MutantMap(children, m => {
+                return render(m())
+              }, (a,b) => a===b ))
+            )
+          } else {
+            children_obs.set(null)
+          }
+        } 
+      }, [
+        h('summary', summary(kv)),
+        children_obs
+      ])
+    )
     pull(source(kv), drain)
     return el
   }

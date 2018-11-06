@@ -6,10 +6,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "tre"
+  ],
   "author": "Jan Bölsche <jan@lagomorph.de> (https://regular.codes/)",
   "license": "ISC",
   "dependencies": {
+    "collect-mutations": "^1.0.0",
     "mutant": "^3.22.1",
     "pull-stream": "^3.6.9"
   }

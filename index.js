@@ -6,16 +6,27 @@ const computed = require('mutant/computed')
 const Value = require('mutant/value')
 const h = require('mutant/html-element')
 
-module.exports = function(ssb) {
+module.exports = function(ssb, opts) {
+  opts = opts || {}
+
   document.body.appendChild(h('style', `
     details.no-children > summary::-webkit-details-marker {
       opacity: 0;
     }
   `))
 
+  function renderName(kv) {
+    const name = kv.value && kv.value.content && kv.value.content.name || 'no name'
+    return h('span', name)
+  }
+
+  function branches(kv) {
+    return ssb.revisions.messagesByBranch(kv.key)
+  }
+
   return function render(kv, ctx) {
-    const branch = kv.key
-    const name = kv.value.content.name
+    const source = opts.source || branches
+    const summary = opts.summary || renderName
     const children = MutantArray()
     const has_children = computed(children, c => c.length !== 0)
     const drain = collectMutations(children)
@@ -31,7 +42,7 @@ module.exports = function(ssb) {
       'ev-toggle': e => {
         if (e.target.open) {
           children_obs.set(
-            h('ol', MutantMap(children, m => {
+            h('ul', MutantMap(children, m => {
               return h('li', render(m()))
             }, (a,b) => a===b ))
           )
@@ -40,16 +51,10 @@ module.exports = function(ssb) {
         }
       } 
     }, [
-      h('summary', [
-        h('span', name),
-      ]),
+      h('summary', summary(kv)),
       children_obs
     ])
-
-    pull(
-      ssb.revisions.messagesByBranch(branch),
-      drain
-    )
+    pull(source(kv), drain)
     return el
   }
 }

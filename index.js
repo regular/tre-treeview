@@ -20,8 +20,12 @@ module.exports = function(ssb, opts) {
     return h('span', name)
   }
 
+  function revisionRoot(kv) {
+    return kv.value.content && kv.value.content.revisionRoot || kv.key
+  }
+
   function branches(kv) {
-    return ssb.revisions.messagesByBranch(kv.key)
+    return ssb.revisions.messagesByBranch(revisionRoot(kv))
   }
 
   return function render(kv, ctx) {

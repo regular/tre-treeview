@@ -6,14 +6,28 @@ const computed = require('mutant/computed')
 const Value = require('mutant/value')
 const h = require('mutant/html-element')
 
+function AddStyle(module_name) {
+  return function addStyle(css) {
+    if (!document.head.querySelector(`style[data-module="${module_name}"]`)) {
+      document.head.appendChild(h('style', {
+        attributes: {
+          'data-module': module_name
+        }
+      }, css))
+    }
+  }
+}
+
+const addStyle = AddStyle('tre-treeview')
+
 module.exports = function(ssb, opts) {
   opts = opts || {}
 
-  document.body.appendChild(h('style', `
-    .no-children>details>summary::-webkit-details-marker {
+  addStyle(`
+    details.no-children>summary::-webkit-details-marker {
       opacity: 0;
     }
-  `))
+  `)
 
   function renderName(kv) {
     const name = kv.value && kv.value.content && kv.value.content.name || 'no name'
@@ -31,37 +45,42 @@ module.exports = function(ssb, opts) {
   return function render(kv, ctx) {
     const source = opts.source || branches
     const summary = opts.summary || renderName
+    const RenderList = opts.listRenderer || DefaultRenderList
     const children = MutantArray()
     const has_children = computed(children, c => c.length !== 0)
-    const drain = collectMutations(children)
-    const children_obs = Value()
+    const drain = collectMutations(children, {sync: opts.sync})
+    const children_els = Value()
 
-    const el = h(
-      'li', {
-        classList: computed(has_children, hc => hc ? 'children' : 'no-children'),
-        hooks: [el => function release() {
-          console.log('release')
-          children_obs.set(null)
-          drain.abort()
-        }]
-      },
-      h('details', {
-        'ev-toggle': e => {
-          if (e.target.open) {
-            children_obs.set(
-              h('ul', MutantMap(children, m => {
-                return render(m())
-              }, (a,b) => a===b ))
-            )
-          } else {
-            children_obs.set(null)
-          }
-        } 
-      }, [
-        h('summary', summary(kv)),
-        children_obs
-      ])
-    )
+    function DefaultRenderList() {
+      return function(list, ctx) {
+        return h('ul', MutantMap(list, m => {
+          return h('li', render(m()))
+        }, (a,b) => a===b ))
+      }
+    }
+
+    const el = h('details', {
+      classList: computed(has_children, hc => hc ? 'children' : 'no-children'),
+      hooks: [el => function release() {
+        console.log('release')
+        children_els.set(null)
+        drain.abort()
+      }],
+      'ev-toggle': e => {
+        if (e.target.open) {
+          children_els.set(
+            RenderList({
+              renderItem: render
+            })(children, ctx)
+          )
+        } else {
+          children_els.set(null)
+        }
+      } 
+    }, [
+      h('summary', summary(kv)),
+      children_els
+    ])
     pull(source(kv), drain)
     return el
   }

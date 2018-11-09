@@ -15,5 +15,15 @@
     "collect-mutations": "^1.0.0",
     "mutant": "^3.22.1",
     "pull-stream": "^3.6.9"
+  },
+  "tre-init": {
+    "plugins": {
+      "tre-client": true,
+      "ssb-revisions": true
+    }
+  },
+  "devDependencies": {
+    "ssb-revisions": "^1.0.1",
+    "tre-client": "^1.1.0"
   }
 }

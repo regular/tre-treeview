@@ -26,7 +26,7 @@ module.exports = function(ssb, opts) {
   }
 
   function branches(kv) {
-    return ssb.revisions.messagesByBranch(revisionRoot(kv))
+    return ssb.revisions.messagesByBranch(revisionRoot(kv), {live: true, sync: true})
   }
 
   return function render(kv, ctx) {
@@ -41,7 +41,7 @@ module.exports = function(ssb, opts) {
     function DefaultRenderList() {
       return function(list, ctx) {
         return h('ul', MutantMap(list, m => {
-          return h('li', render(m()))
+          return h('li', render(m(), ctx))
         }, (a,b) => a===b ))
       }
     }

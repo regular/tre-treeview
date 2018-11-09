@@ -5,25 +5,12 @@ const MutantMap = require('mutant/map')
 const computed = require('mutant/computed')
 const Value = require('mutant/value')
 const h = require('mutant/html-element')
-
-function AddStyle(module_name) {
-  return function addStyle(css) {
-    if (!document.head.querySelector(`style[data-module="${module_name}"]`)) {
-      document.head.appendChild(h('style', {
-        attributes: {
-          'data-module': module_name
-        }
-      }, css))
-    }
-  }
-}
-
-const addStyle = AddStyle('tre-treeview')
+const setStyles = require('module-styles')('tre-treeview')
 
 module.exports = function(ssb, opts) {
   opts = opts || {}
 
-  addStyle(`
+  setStyles(`
     details.no-children>summary::-webkit-details-marker {
       opacity: 0;
     }

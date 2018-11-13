@@ -9,10 +9,15 @@ const setStyles = require('module-styles')('tre-treeview')
 
 module.exports = function(ssb, opts) {
   opts = opts || {}
+  let {skipFirstLevel} = opts
 
   setStyles(`
     details.no-children>summary::-webkit-details-marker {
-      opacity: 0;
+      opacity: 0.3;
+    }
+    summary:focus {
+      background-color: rgba(0,0,200,0.1);
+      outline-color: rgba(0,0,0,0);
     }
   `)
 
@@ -46,19 +51,37 @@ module.exports = function(ssb, opts) {
       }
     }
 
+    function renderChildren() {
+      const newCtx = Object.assign({}, ctx, {
+        path: (ctx && ctx.path || []).concat(kv)
+      })
+      return RenderList({
+        renderItem: render
+      })(children, newCtx)
+    }
+
+    pull(source(kv), drain)
+
+    if (skipFirstLevel) {
+      skipFirstLevel = false
+      return renderChildren()
+    }
+
     const el = h('details', {
       classList: computed(has_children, hc => hc ? 'children' : 'no-children'),
       hooks: [el => function release() {
-        console.log('release')
         children_els.set(null)
         drain.abort()
       }],
+      'ev-click': e => {
+        if (!has_children()) {
+          e.preventDefault()
+        }
+      },
       'ev-toggle': e => {
         if (e.target.open) {
           children_els.set(
-            RenderList({
-              renderItem: render
-            })(children, ctx)
+            renderChildren()
           )
         } else {
           children_els.set(null)
@@ -68,7 +91,7 @@ module.exports = function(ssb, opts) {
       h('summary', summary(kv)),
       children_els
     ])
-    pull(source(kv), drain)
+
     return el
   }
 }

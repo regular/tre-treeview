@@ -88,7 +88,7 @@ module.exports = function(ssb, opts) {
         }
       } 
     }, [
-      h('summary', summary(kv)),
+      h('summary', summary(kv, ctx)),
       children_els
     ])
 

@@ -3,6 +3,7 @@ const collectMutations = require('collect-mutations')
 const MutantArray = require('mutant/array')
 const MutantMap = require('mutant/map')
 const computed = require('mutant/computed')
+const watch = require('mutant/watch')
 const Value = require('mutant/value')
 const h = require('mutant/html-element')
 const setStyles = require('module-styles')('tre-treeview')
@@ -66,12 +67,22 @@ module.exports = function(ssb, opts) {
       skipFirstLevel = false
       return renderChildren()
     }
-
-    const el = h('details', {
+    
+    let el
+    const abortWatch = watch(has_children, hc => {
+      if (!el) return
+      if (hc && ctx.shouldOpen && ctx.shouldOpen(kv)) {
+        el.open = true   
+      } else if (!hc && el.open) {
+        el.open = false
+      }
+    })
+    el = h('details', {
       classList: computed(has_children, hc => hc ? 'children' : 'no-children'),
       hooks: [el => function release() {
         children_els.set(null)
         drain.abort()
+        abortWatch()
       }],
       'ev-click': e => {
         if (!has_children()) {

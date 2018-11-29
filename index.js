@@ -7,10 +7,13 @@ const watch = require('mutant/watch')
 const Value = require('mutant/value')
 const h = require('mutant/html-element')
 const setStyles = require('module-styles')('tre-treeview')
+const ResolvePrototypes = require('tre-prototypes')
 
 module.exports = function(ssb, opts) {
   opts = opts || {}
   let {skipFirstLevel} = opts
+
+  const resolvePrototypes = ResolvePrototypes(ssb)
 
   setStyles(`
     details.no-children>summary::-webkit-details-marker {
@@ -43,6 +46,10 @@ module.exports = function(ssb, opts) {
     const has_children = computed(children, c => c.length !== 0)
     const drain = collectMutations(children, {sync: opts.sync})
     const children_els = Value()
+    let resolvedChildren = children
+    if (opts.resolve_prototypes !== false) {
+      resolvedChildren = MutantMap(children, resolvePrototypes)
+    }
 
     function DefaultRenderList() {
       return function(list, ctx) {
@@ -58,7 +65,7 @@ module.exports = function(ssb, opts) {
       })
       return RenderList({
         renderItem: render
-      })(children, newCtx)
+      })(resolvedChildren, newCtx)
     }
 
     pull(source(kv), drain)

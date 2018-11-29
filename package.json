@@ -15,7 +15,8 @@
     "collect-mutations": "^1.0.0",
     "module-styles": "^1.0.0",
     "mutant": "^3.22.1",
-    "pull-stream": "^3.6.9"
+    "pull-stream": "^3.6.9",
+    "tre-prototypes": "^1.0.0"
   },
   "tre-init": {
     "plugins": {

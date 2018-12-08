@@ -48,14 +48,14 @@ module.exports = function(ssb, opts) {
     const children_els = Value()
     let resolvedChildren = children
     if (opts.resolve_prototypes !== false) {
-      resolvedChildren = MutantMap(children, resolvePrototypes)
+      resolvedChildren = MutantMap(children, resolvePrototypes, {comparer: cmp})
     }
 
     function DefaultRenderList() {
       return function(list, ctx) {
         return h('ul', MutantMap(list, m => {
           return h('li', render(m(), ctx))
-        }, (a,b) => a===b ))
+        }, {comparer}))
       }
     }
 
@@ -113,3 +113,16 @@ module.exports = function(ssb, opts) {
     return el
   }
 }
+
+function cmp(a, b) {
+  //console.warn('treeview cmp', a, b)
+  if (typeof a == 'function') a = a()
+  if (typeof b == 'function') b = b()
+  return (a && a.key) == (b && b.key)
+}
+
+function comparer(a, b) {
+  //console.warn('treeview (DefaultListRenderer)', a && a(), b && b())
+  return (a && a() && a().key) == (b && b() && b().key)
+}
+

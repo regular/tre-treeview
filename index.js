@@ -48,7 +48,7 @@ module.exports = function(ssb, opts) {
     const children_els = Value()
     let resolvedChildren = children
     if (opts.resolve_prototypes !== false) {
-      resolvedChildren = MutantMap(children, resolvePrototypes, {comparer: cmp})
+      resolvedChildren = MutantMap(children, resolvePrototypes, {comparer})
     }
 
     function DefaultRenderList() {
@@ -114,15 +114,17 @@ module.exports = function(ssb, opts) {
   }
 }
 
-function cmp(a, b) {
-  //console.warn('treeview cmp', a, b)
-  if (typeof a == 'function') a = a()
-  if (typeof b == 'function') b = b()
-  return (a && a.key) == (b && b.key)
-}
-
 function comparer(a, b) {
-  //console.warn('treeview (DefaultListRenderer)', a && a(), b && b())
-  return (a && a() && a().key) == (b && b() && b().key)
+  // NOTE: a and b might be observables 
+  /*
+  It might be beneficial to overall perofrmance to make a slightly deeper comparison of
+  - keys
+  - meta (wihtout prototype-chain)
+  - keys of prototype chain
+
+  It's not enough to just compare akey to b.key because changes in
+  prototypes would slip through.
+  */
+  return a === b
 }
 

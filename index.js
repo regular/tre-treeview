@@ -91,16 +91,15 @@ module.exports = function(ssb, opts) {
         drain.abort()
         abortWatch()
       }],
-      'ev-click': e => {
-        if (!has_children()) {
-          e.preventDefault()
-        }
-      },
       'ev-toggle': e => {
         if (e.target.open) {
-          children_els.set(
-            renderChildren()
-          )
+          if (has_children()) {
+            children_els.set(
+              renderChildren()
+            )
+          } else {
+            e.target.open = false
+          }
         } else {
           children_els.set(null)
         }

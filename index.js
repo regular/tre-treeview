@@ -78,7 +78,7 @@ module.exports = function(ssb, opts) {
     let el
     const abortWatch = watch(has_children, hc => {
       if (!el) return
-      if (hc && ctx.shouldOpen && ctx.shouldOpen(kv)) {
+      if (hc && ctx && ctx.shouldOpen && ctx.shouldOpen(kv)) {
         el.open = true   
       } else if (!hc && el.open) {
         el.open = false

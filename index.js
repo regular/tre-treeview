@@ -48,7 +48,9 @@ module.exports = function(ssb, opts) {
     const children_els = Value()
     let resolvedChildren = children
     if (opts.resolve_prototypes !== false) {
-      resolvedChildren = MutantMap(children, resolvePrototypes, {comparer})
+      resolvedChildren = MutantMap(children, x => {
+        return resolvePrototypes(x, {allowAllAuthors: true})
+      }, {comparer})
     }
 
     function DefaultRenderList() {

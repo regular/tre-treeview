@@ -39,6 +39,7 @@ module.exports = function(ssb, opts) {
   }
 
   return function render(kv, ctx) {
+    if (!kv) return []
     const source = opts.source || branches
     const summary = opts.summary || renderName
     const RenderList = opts.listRenderer || DefaultRenderList
@@ -58,7 +59,7 @@ module.exports = function(ssb, opts) {
         return h('ul', MutantMap(list, m => {
           if (!m) return []
           return h('li', render(m(), ctx))
-        }, {comparer}))
+        }, {comparer, maxTime: 200}))
       }
     }
 
@@ -71,7 +72,10 @@ module.exports = function(ssb, opts) {
       })(resolvedChildren, newCtx)
     }
 
-    pull(source(kv), drain)
+    pull(
+      source(kv), 
+      drain
+    )
 
     if (skipFirstLevel) {
       skipFirstLevel = false

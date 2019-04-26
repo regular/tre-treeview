@@ -56,6 +56,7 @@ module.exports = function(ssb, opts) {
     function DefaultRenderList() {
       return function(list, ctx) {
         return h('ul', MutantMap(list, m => {
+          if (!m) return []
           return h('li', render(m(), ctx))
         }, {comparer}))
       }

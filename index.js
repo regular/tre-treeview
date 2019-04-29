@@ -34,8 +34,17 @@ module.exports = function(ssb, opts) {
     return kv.value.content && kv.value.content.revisionRoot || kv.key
   }
 
-  function branches(kv) {
-    return ssb.revisions.messagesByBranch(revisionRoot(kv), {live: true, sync: true})
+  function branches(parentKV) {
+    //console.log('BRANCHES of', revisionRoot(parentKV))
+    return pull(
+      ssb.revisions.messagesByBranch(revisionRoot(parentKV), {live: true, sync: true})
+      /*
+      pull.through(kkv=>{
+        if (!kkv.sync) console.log('- branch of', kkv.key)
+        else console.log('sync')
+      })
+      */
+    )
   }
 
   return function render(kv, ctx) {
@@ -44,22 +53,29 @@ module.exports = function(ssb, opts) {
     const summary = opts.summary || renderName
     const RenderList = opts.listRenderer || DefaultRenderList
     const children = MutantArray()
-    const has_children = computed(children, c => c.length !== 0)
+    const has_children = computed(children, c =>{
+      //console.warn('c.length', c.length)
+      return c.length !== 0
+    })
     const drain = collectMutations(children, {sync: opts.sync})
     const children_els = Value()
     let resolvedChildren = children
     if (opts.resolve_prototypes !== false) {
-      resolvedChildren = MutantMap(children, x => {
-        return resolvePrototypes(x, {allowAllAuthors: true})
-      }, {comparer})
+      resolvedChildren = MutantMap(children, headObs => {
+        return resolvePrototypes(headObs, {
+          allowAllAuthors: true,
+          suppressIntermediate: false
+        })
+      }, {comparer: kvcomp})
     }
 
     function DefaultRenderList() {
+      console.warn('DefaultRenderList')
       return function(list, ctx) {
         return h('ul', MutantMap(list, m => {
           if (!m) return []
           return h('li', render(m(), ctx))
-        }, {comparer, maxTime: opts.maxTime}))
+        }, {comparer:kvcomp, maxTime: opts.maxTime, idle: true}))
       }
     }
 
@@ -132,5 +148,15 @@ function comparer(a, b) {
   prototypes would slip through.
   */
   return a === b
+}
+
+function kvcomp(a,b) {
+  a = typeof a == 'function' ? a() : a
+  b = typeof b == 'function' ? b() : b
+  //console.log(a, '==', b)
+  if (!a && !b) return true
+  const ak = a && a.key
+  const bk = b && b.key
+  return ak == bk
 }
 

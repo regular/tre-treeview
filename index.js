@@ -59,7 +59,7 @@ module.exports = function(ssb, opts) {
         return h('ul', MutantMap(list, m => {
           if (!m) return []
           return h('li', render(m(), ctx))
-        }, {comparer, maxTime: 200}))
+        }, {comparer, maxTime: opts.maxTime}))
       }
     }
 
